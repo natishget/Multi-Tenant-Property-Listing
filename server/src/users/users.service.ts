@@ -21,9 +21,8 @@ export class UsersService {
         select: {
           id: true,
           name: true,
-          isSeller: true,
+          role: true,
           email: true,
-          phone: true
         }
       }
     )

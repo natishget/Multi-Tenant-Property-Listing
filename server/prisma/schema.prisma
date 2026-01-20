@@ -6,76 +6,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum OrderStatus {
-  pending
-  accepted
-  waiting
-  paid
-  delivering
-  sold
-  cancelled
+enum RoleTypes {
+  admin
+  user
+  owner
+}
+
+enum PropertyStatus {
+  draft
+  published
+  archived
 }
 
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
-  password  String
-  phone     String
   name      String?
-  isSeller  Boolean   @default(false)
+  password  String
+  role      RoleTypes @default(user)
   createdAt DateTime  @default(now())
-  orders    Order[]   @relation("BuyerOrders")
-  products  Product[]
-  pushSubscription PushSubscription[]
-  Notification Notification[]
+  
+  properties  Property[]
+  favorites  Favorite[]
 }
 
-model Product {
-  id          Int      @id @default(autoincrement())
+model Property {
+  id          Int             @id @default(autoincrement())
   title       String
   description String
   price       Float
-  quantity    Int
-  imageUrl    String?
-  category    String
-  sellerId    Int
-  createdAt   DateTime @default(now())
-  orders      Order[]
-  seller      User     @relation(fields: [sellerId], references: [id])
+  location    String
+  imageUrl    String[]
+  status      PropertyStatus  @default(draft)
+  ownerId     Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  favorites Favorite[]
 }
 
-model Order {
+model Favorite {
   id         Int      @id @default(autoincrement())
-  productId  Int
-  buyerId    Int
-  quantity   Int
-  totalPrice Float
-  status     OrderStatus   @default(pending)
-  createdAt  DateTime      @default(now())
-  buyer      User          @relation("BuyerOrders", fields: [buyerId], references: [id])
-  product    Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-}
-
-model PushSubscription {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
+  userId     Int
+  propertyId Int
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId]) // prevents duplicate favorites
 }
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int      
-  title     String
-  body      String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-

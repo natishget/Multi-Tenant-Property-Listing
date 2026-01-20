@@ -30,14 +30,12 @@ export class AuthService {
                 email: dto.email,
                 name: dto.name,
                 password: hashedPassword,
-                phone: dto.phone,
-                isSeller: dto.isSeller === "seller" ? true : false,
+                role: dto.role,
             },
         });
         return {
             id: user.id,
             name: user.name,
-            phone: user.phone,
             email: user.email
         }
     }
@@ -51,8 +49,7 @@ export class AuthService {
                 name: true,
                 password: true,
                 email: true,
-                phone: true,
-                isSeller: true,
+                role: true,
             },
         });
 
@@ -66,9 +63,9 @@ export class AuthService {
             throw new UnauthorizedException("Invalid email or password");
         }
 
-        const token = this.jwtService.sign({ userId: existingUser.id, email: existingUser.email, phone: existingUser.phone, name: existingUser.name, isSeller: existingUser.isSeller})
+        const token = this.jwtService.sign({ userId: existingUser.id, email: existingUser.email, name: existingUser.name, role: existingUser.role})
         return {
-            isSeller: existingUser.isSeller,
+            role: existingUser.role,
             message: "Login Sucessful",
             access_token: token
         };
