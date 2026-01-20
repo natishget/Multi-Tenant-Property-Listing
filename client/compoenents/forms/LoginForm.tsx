@@ -28,12 +28,12 @@ const LoginForm = () => {
   const router = useRouter();
 
   const { user, loading, initialized } = useSelector(
-    (state: RootState) => state.api
+    (state: RootState) => state.api,
   );
 
-  if (initialized && user?.isSeller) {
+  if (initialized && user?.role === "owner") {
     router.push("/product");
-  } else if (initialized && !user?.isSeller && user) {
+  } else if (initialized && user?.role === "user" && user) {
     router.push("/");
   }
 
@@ -50,7 +50,7 @@ const LoginForm = () => {
     setIsLoading(true);
     try {
       const response = await dispatch(loginAsync(data)).unwrap();
-      setIsSeller(response?.isSeller ? 1 : 2);
+      setIsSeller(response?.role === "owner" ? 1 : 2);
     } catch (error: any) {
       setError(error);
     } finally {
@@ -61,7 +61,7 @@ const LoginForm = () => {
   useEffect(() => {
     console.log("isSeller value:", isSeller);
     isSeller === 1
-      ? router.push("/product")
+      ? router.push("/property")
       : isSeller === 2 && router.push("/");
   }, [isSeller, router]);
 

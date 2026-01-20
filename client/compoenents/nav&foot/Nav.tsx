@@ -31,7 +31,7 @@ const Nav = () => {
   };
 
   const { user, loading, initialized } = useSelector(
-    (state: RootState) => state.api
+    (state: RootState) => state.api,
   );
   const cartProducts = useSelector((state: RootState) => state.cart.items);
 
@@ -87,60 +87,24 @@ const Nav = () => {
       </h1>
       <h1 className="text-xl">Hello {user?.name}</h1>
       <div className="flex items-center gap-10 text-lg font-semibold">
-        <ProductSearch />
         <Link
           href="/"
           className={`hover:text-[rgb(56,177,151)] ${
-            !user?.isSeller ? "" : "hidden"
+            user?.role === "user" ? "" : "hidden"
           } ${location === "/" && "text-[rgb(56,177,151)]"}`}
         >
           Products
         </Link>
 
         <Link
-          href="/product"
+          href="/property"
           className={`hover:text-[rgb(56,177,151)] ${
-            user?.isSeller ? "" : "hidden"
-          } ${location === "/product" && "text-[rgb(56,177,151)]"}`}
+            user?.role === "owner" ? "" : "hidden"
+          } ${location === "/property" && "text-[rgb(56,177,151)]"}`}
         >
           My Products
         </Link>
 
-        <Link
-          href={`${user?.isSeller ? "/order/seller" : "/order/buyer"}`}
-          className={`hover:text-[rgb(56,177,151)] ${
-            location === "/order/seller" || location === "/order/buyer"
-              ? "text-[rgb(56,177,151)]"
-              : ""
-          }`}
-        >
-          My Orders
-        </Link>
-
-        <Link
-          href=""
-          onClick={registerPush}
-          className={`hover:text-[rgb(56,177,151)] ${
-            location === "/notification" && "text-[rgb(56,177,151)]"
-          }`}
-        >
-          <Bell />
-        </Link>
-        <Link
-          href="/cart"
-          className={`hover:text-[rgb(56,177,151)] relative ${
-            user?.isSeller ? "hidden" : ""
-          } ${location === "/cart" && "text-[rgb(56,177,151)]"}`}
-        >
-          <div
-            className={`absolute w-5 h-5 rounded-full bg-red-600 text-white text-xs flex justify-center items-center bottom-4 -right-4 ${
-              cartProducts.length === 0 && "hidden"
-            }`}
-          >
-            {cartProducts.length}
-          </div>
-          <ShoppingCart />
-        </Link>
         <Link
           href=""
           className={`hover:text-[rgb(56,177,151)] ${

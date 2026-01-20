@@ -26,12 +26,12 @@ const RegisterationForm = () => {
   const router = useRouter();
 
   const { user, loading, initialized } = useSelector(
-    (state: RootState) => state.api
+    (state: RootState) => state.api,
   );
 
-  if (initialized && user?.isSeller) {
-    router.push("/product");
-  } else if (initialized && !user?.isSeller && user) {
+  if (initialized && user?.role === "owner") {
+    router.push("/property");
+  } else if (initialized && user?.role === "user" && user) {
     router.push("/");
   }
 
@@ -113,27 +113,22 @@ const RegisterationForm = () => {
         <br />
         <div className=" gap-3 justify-center w-[40%]">
           <div className="">
-            <input
-              type="radio"
-              id="buyer"
-              value="buyer"
-              {...register("isSeller")}
-            />
+            <input type="radio" id="buyer" value="user" {...register("role")} />
             <label htmlFor="buyer" className="">
-              Buyer
+              User
             </label>
           </div>
           <div>
             <input
               type="radio"
               id="seller"
-              value="seller"
-              {...register("isSeller")}
+              value="owner"
+              {...register("role")}
             />
-            <label htmlFor="seller">Seller</label>
+            <label htmlFor="seller">Owner</label>
           </div>
         </div>
-        <p className="text-red-500">{errors.isSeller?.message}</p>
+        <p className="text-red-500">{errors.role?.message}</p>
         <br />
         <br />
         <button

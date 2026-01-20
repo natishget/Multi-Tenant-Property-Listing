@@ -4,18 +4,18 @@ import { AlertDialog, Button, Flex } from "@radix-ui/themes";
 import { Trash2 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/state/store";
-import { deleteProductAsync } from "@/state/API/ApiSlice";
+import { deletePropertyAsync } from "@/state/API/ApiSlice";
 
-const ProductDeleteAlertDialog = ({ productId }: { productId: number }) => {
+const PropertyDeleteAlertDialog = ({ propertyId }: { propertyId: number }) => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      await dispatch(deleteProductAsync({ id: productId })).unwrap();
+      await dispatch(deletePropertyAsync({ id: propertyId })).unwrap();
     } catch (error) {
-      console.error("Failed to delete the product:", error);
+      console.error("Failed to delete the property:", error);
     } finally {
       setIsLoading(false);
     }
@@ -50,4 +50,4 @@ const ProductDeleteAlertDialog = ({ productId }: { productId: number }) => {
   );
 };
 
-export default ProductDeleteAlertDialog;
+export default PropertyDeleteAlertDialog;

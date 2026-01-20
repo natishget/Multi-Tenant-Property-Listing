@@ -4,8 +4,8 @@ import { Dialog } from "@radix-ui/themes";
 import { Pencil } from "lucide-react";
 import { AppDispatch } from "@/state/store";
 import { useDispatch } from "react-redux";
-import { Product } from "@/state/API/ApiSlice";
-import { editProductAsync } from "@/state/API/ApiSlice";
+import { Property } from "@/state/API/ApiSlice";
+import { editPropertyAsync } from "@/state/API/ApiSlice";
 
 import { set, z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +17,7 @@ import { addProductSchema } from "@/lib/validationSchema";
 
 type FormValues = z.infer<typeof addProductSchema>;
 
-const EditProductDialog = ({ product }: { product: Product }) => {
+const EditPropertyDialog = ({ property }: { property: Property }) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
@@ -28,7 +28,10 @@ const EditProductDialog = ({ product }: { product: Product }) => {
     setIsLoading(true);
     try {
       const response = await dispatch(
-        editProductAsync({ product: { ...product, ...data }, id: product.id })
+        editPropertyAsync({
+          property: { ...property, ...data, imageUrl: data.imageUrl },
+          id: property.id,
+        }),
       ).unwrap();
       setOpen(false);
       // router.push("/login");
@@ -47,18 +50,16 @@ const EditProductDialog = ({ product }: { product: Product }) => {
   } = useForm<FormValues>({
     resolver: zodResolver(addProductSchema),
     defaultValues: {
-      title: product.title,
-      quantity: product.quantity,
-      price: product.price,
-      category: product.category,
-      imageUrl: product.imageUrl,
-      description: product.description,
+      title: property.title,
+      price: property.price,
+      location: property.location,
+      imageUrl: Array.isArray(property.imageUrl)
+        ? property.imageUrl
+        : [property.imageUrl ?? ""],
+      description: property.description,
     },
   });
 
-  //   useEffect(() => {
-  //     reset(product); // update if prop changes
-  //   }, [product, reset]);
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger>
@@ -91,27 +92,15 @@ const EditProductDialog = ({ product }: { product: Product }) => {
             </div>
             <br />
             <div className="flex flex-col w-[60%] gap-1 text-gray-600">
-              <label htmlFor="quantity">Quantity</label>
-              <input
-                type="number"
-                id="quantity"
-                {...register("quantity", { valueAsNumber: true })}
-                placeholder="Quantity"
-                className=" p-5  bg-[rgb(244,248,247)]"
-              />{" "}
-              <p className="text-red-500">{errors.quantity?.message}</p>
-            </div>
-            <br />
-            <div className="flex flex-col w-[60%] gap-1 text-gray-600">
               <label htmlFor="category">Category</label>
               <input
                 type="text"
-                {...register("category")}
+                {...register("location")}
                 id="category"
                 placeholder="Category"
                 className="p-5  bg-[rgb(244,248,247)]"
               />
-              <p className="text-red-500">{errors.category?.message}</p>
+              <p className="text-red-500">{errors.location?.message}</p>
             </div>
             <br />
             <div className="flex flex-col w-[60%] gap-1 text-gray-600">
@@ -169,4 +158,4 @@ const EditProductDialog = ({ product }: { product: Product }) => {
   );
 };
 
-export default EditProductDialog;
+export default EditPropertyDialog;

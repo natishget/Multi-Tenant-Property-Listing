@@ -11,7 +11,7 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Password must atleast have one number")
     .regex(/^[a-zA-Z0-9]/, "Password must have atleast one Special character"),
     confirmPassword: z.string(),
-    isSeller: z.enum(["seller", "buyer"], { message: "Please select Buyer or Seller" }),
+    role: z.enum(["user", "owner"], { message: "Please select Buyer or Seller" }),
     // isSeller: z.string().refine(val => val === "buyer" || val === "seller", { message: "Please select Buyer of Seller" }).transform(val => val==="seller")
 })
 .refine((data) => data.password === data.confirmPassword, {
@@ -26,9 +26,8 @@ export const loginSchema = z.object({
 
 export const addProductSchema = z.object({
     title: z.string().min(3, "Title must be atleast 3 Characters"),
-    quantity: z.number().min(1, "Quantity must be greater than 0"),
     price: z.number().min(1, "Price must be greater than 0"),
-    category: z.string().min(3, "Category must be atleast 3 Characters"),
-    imageUrl: z.string().url("Invalid URL"),
+    location: z.string().min(3, "Location must be atleast 3 Characters"),
+    imageUrl: z.array(z.string().url("Invalid URL")),
     description: z.string().min(10, "Description must be atleast 10 Characters"),
 });
