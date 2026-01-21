@@ -13,7 +13,13 @@ import { AppDispatch } from "@/state/store";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const OwnerPropertyCard = ({ property }: { property: Property }) => {
+const OwnerPropertyCard = ({
+  property,
+  role,
+}: {
+  property: Property;
+  role?: string;
+}) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -47,7 +53,7 @@ const OwnerPropertyCard = ({ property }: { property: Property }) => {
         }),
       ).unwrap();
     } catch (err: any) {
-      console.log("Error updating property status:", err);
+      alert(err?.message || "Failed to update property status");
     }
   };
 
@@ -99,20 +105,30 @@ const OwnerPropertyCard = ({ property }: { property: Property }) => {
           Description: <br />{" "}
           <span className="text-gray-500">{property.description}</span>
         </p>
+        {role === "admin" && (
+          <p className="pl-3 ">
+            Owner: <br />{" "}
+            <span className="text-gray-500">
+              {property.owner.name} ({property.owner.email})
+            </span>
+          </p>
+        )}
         <div className="flex justify-end m-3 gap-4 text-xs">
           <button
-            className={`px-2 py-2 text-white font-bold bg-[rgb(56,177,151)] rounded ${property?.status === "draft" ? "bg-yellow-500" : property?.status === "published" ? "bg-green-600" : "bg-gray-600"}`}
+            className={`px-2 py-2 text-white font-bold bg-[rgb(56,177,151)] rounded ${property?.status === "draft" ? "bg-yellow-500" : property?.status === "published" ? "bg-green-600" : "bg-gray-600"} ${(property.status === "published" || property.status === "draft") && role === "admin" ? "hidden" : ""}`}
             onClick={() => handleStatusChange()}
           >
-            {property.status === "published" ? (
+            {property.status === "published" && role !== "admin" ? (
               <Eye />
-            ) : property.status === "draft" ? (
+            ) : property.status === "draft" && role !== "admin" ? (
               <EyeClosed />
             ) : (
-              <Archive />
+              property.status === "archived" && <Archive />
             )}
           </button>
-          <button className="px-2 py-2 text-white font-bold bg-[rgb(56,177,151)] rounded ">
+          <button
+            className={`px-2 py-2 text-white font-bold bg-[rgb(56,177,151)] rounded ${role === "admin" && "hidden"}`}
+          >
             <EditPropertyDialog property={property} />
           </button>
           <button

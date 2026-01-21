@@ -8,7 +8,7 @@ const Page = () => {
       <div className="w-[80%] h-[80%] flex border border-gray-100 rounded-xl bg-white drop-shadow-lg ">
         {/* sign in to easy buy  */}
         <div className="w-1/4 bg-[rgb(56,177,151)] text-white">
-          <h1 className="p-5 font-bold">EasyBuy</h1>
+          <h1 className="p-5 font-bold">MultiTenant</h1>
           <div className="flex flex-col items-center justify-center gap-6 w-full h-[90%]">
             <h1 className="text-5xl font-bold ">Welcome Back!</h1>
             <div className="flex flex-col justify-center items-center">

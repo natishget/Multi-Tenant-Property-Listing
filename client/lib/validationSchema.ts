@@ -11,7 +11,7 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Password must atleast have one number")
     .regex(/^[a-zA-Z0-9]/, "Password must have atleast one Special character"),
     confirmPassword: z.string(),
-    role: z.enum(["user", "owner"], { message: "Please select Buyer or Seller" }),
+    role: z.enum(["user", "owner", "admin"], { message: "Please select Buyer or Seller" }),
     // isSeller: z.string().refine(val => val === "buyer" || val === "seller", { message: "Please select Buyer of Seller" }).transform(val => val==="seller")
 })
 .refine((data) => data.password === data.confirmPassword, {

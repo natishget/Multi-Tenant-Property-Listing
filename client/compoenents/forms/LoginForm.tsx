@@ -24,7 +24,7 @@ const LoginForm = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState();
-  const [isSeller, setIsSeller] = useState(0);
+  const [isSeller, setIsSeller] = useState(3);
   const router = useRouter();
 
   const { user, loading, initialized } = useSelector(
@@ -50,7 +50,9 @@ const LoginForm = () => {
     setIsLoading(true);
     try {
       const response = await dispatch(loginAsync(data)).unwrap();
-      setIsSeller(response?.role === "owner" ? 1 : 2);
+      setIsSeller(
+        response?.role === "owner" ? 1 : response?.role === "user" ? 2 : 0,
+      );
     } catch (error: any) {
       setError(error);
     } finally {
@@ -62,7 +64,9 @@ const LoginForm = () => {
     console.log("isSeller value:", isSeller);
     isSeller === 1
       ? router.push("/property")
-      : isSeller === 2 && router.push("/");
+      : isSeller === 2
+        ? router.push("/")
+        : isSeller === 0 && router.push("/admin-dashboard");
   }, [isSeller, router]);
 
   return (

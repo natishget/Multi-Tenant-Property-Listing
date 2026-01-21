@@ -37,8 +37,8 @@ const AddPropertyDialog = () => {
 
       await dispatch(addPropertyAsync(formData)).unwrap();
       setOpen(false);
-    } catch (err: unknown) {
-      console.log("from form", err);
+    } catch (err: any) {
+      alert(err.message || "Failed to add property");
     } finally {
       setIsLoading(false);
     }

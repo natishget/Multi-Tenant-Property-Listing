@@ -28,7 +28,7 @@ interface LoginResponse {
     message?: string;
     error?: string;
     access_token?: string;
-    role?: "user" | "owner";
+    role?: "user" | "owner" | "admin";
 }
 
 export interface Property {
@@ -45,6 +45,7 @@ export interface Property {
         favorites?: number;
     };
     likedByMe: boolean;
+    owner: {id: number, name: string, email: string};
 }
 
 export interface PaginatedPropertyResponse {
@@ -61,7 +62,7 @@ export interface User {
     name: string;
     email: string;
     phone?: number;
-    role?: "user" | "owner";
+    role?: "user" | "owner" | "admin";
 }
 
 const initialState: ApiState = {
@@ -88,7 +89,6 @@ export const loginAsync = createAsyncThunk<
 >("loginAsync", async (data, { rejectWithValue, dispatch }) => {
     try {
         const loginResponse = await api.post("/auth/login", data, { withCredentials: true });
-        // after successful login, fetch user info and store it
         dispatch(protectedRouteAsync());
         return loginResponse.data;
     } catch (error: any) {
@@ -152,11 +152,23 @@ export const getAllPublishedProperty = createAsyncThunk<
 >("getAllPublishedProperty", async ({page = 1}, { rejectWithValue }) => {
     try {
         const response = await api.get("/property/published", { params: { page }, withCredentials: true });
-        console.log("slice response", response);
         return response.data;
     } catch (error: any) {
-        console.log("error trying to get all property in slice", error);
+
         return rejectWithValue(error.response?.data?.message || "Failed to get Properties");
+    }
+});
+
+export const getAllProperties = createAsyncThunk<
+    PaginatedPropertyResponse,
+    {page?: number},
+    { rejectValue: string }
+>("getAllProperties", async ({page = 1}, { rejectWithValue }) => {
+    try {
+        const response = await api.get("/property", { params: { page }, withCredentials: true });
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Failed to get owner properties");
     }
 });
 
@@ -209,7 +221,7 @@ export const getOwnerProperties = createAsyncThunk<
 >("getOwnerProperties", async ({page = 1}, { rejectWithValue }) => {
     try {
         const response = await api.get("/property/owner", { params: { page }, withCredentials: true });
-        console.log("slice response", response);
+        
         return response.data;
     } catch (error: any) {
         return rejectWithValue(error.response?.data?.message || "Failed to get owner properties");
@@ -336,6 +348,22 @@ const ApiSlice = createSlice({
                 state.error = action.payload || action.error.message || "something went wrong";
             })
 
+            // get all properties
+            .addCase(getAllProperties.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getAllProperties.fulfilled, (state, action) => {
+                state.loading = false;
+                state.Property = action.payload.data;
+                state.ownerMeta = {totalItems: action.payload.totalItems, page: action.payload.page, totalPages: action.payload.totalPages};
+                
+            })
+            .addCase(getAllProperties.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload || action.error.message || "something went wrong";
+            })
+
             // add product
             .addCase(addPropertyAsync.pending, (state) => {
                 state.loading = true;
@@ -428,8 +456,6 @@ const ApiSlice = createSlice({
                     const toggled = !property.likedByMe;
                     const current = property._count?.favorites ?? 0;
                     const favorites = toggled ? current + 1 : Math.max(0, current - 1);
-
-                    console.log("Toggled like status:", toggled, "New favorites count:", favorites);
 
                 const data = {
                     ...property,

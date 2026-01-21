@@ -41,8 +41,8 @@ const EditPropertyDialog = ({ property }: { property: Property }) => {
         }),
       ).unwrap();
       setOpen(false);
-    } catch (err: unknown) {
-      console.log("from form", err);
+    } catch (err: any) {
+      alert(err.message || "Failed to edit property");
       // setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);

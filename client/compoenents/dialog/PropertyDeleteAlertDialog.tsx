@@ -14,8 +14,8 @@ const PropertyDeleteAlertDialog = ({ propertyId }: { propertyId: number }) => {
     setIsLoading(true);
     try {
       await dispatch(deletePropertyAsync({ id: propertyId })).unwrap();
-    } catch (error) {
-      console.error("Failed to delete the property:", error);
+    } catch (error: any) {
+      alert(error.message || "Failed to delete Property");
     } finally {
       setIsLoading(false);
     }

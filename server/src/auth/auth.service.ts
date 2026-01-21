@@ -1,73 +1,59 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, RoleTypes } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
-import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
+import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-    constructor(private prisma: PrismaService, private jwtService: JwtService) {}
+  constructor(private prisma: PrismaService, private jwtService: JwtService) {}
 
-    async registerUser(dto: CreateUserDto){
-        
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email: dto.email },
-        });
-
-        
-
-        if(existingUser){
-            throw new ConflictException('User With that email already exists');
-        }
-
-        // hash password
-        const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-        // create user
-        const user = await this.prisma.user.create({
-            data:{
-                email: dto.email,
-                name: dto.name,
-                password: hashedPassword,
-                role: dto.role,
-            },
-        });
-        return {
-            id: user.id,
-            name: user.name,
-            email: user.email
-        }
+  private handlePrismaError(e: unknown) {
+    if (e && typeof e === 'object' && 'code' in (e as any)) {
+      const err = e as Prisma.PrismaClientKnownRequestError;
+      if (err.code === 'P2002') throw new ConflictException('Email already registered');
+      throw new BadRequestException(err.message);
     }
+    throw e;
+  }
 
-    async loginUser(dto: LoginUserDto){
+  private sanitizeUser(user: { id: number; email: string; name: string | null; role: RoleTypes }) {
+    return { id: user.id, email: user.email, name: user.name, role: user.role };
+  }
 
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email: dto.email},
-            select: {
-                id: true,
-                name: true,
-                password: true,
-                email: true,
-                role: true,
-            },
-        });
+  async registerUser(dto: CreateUserDto) {
+    try {
+      const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (existing) throw new ConflictException('Email already registered');
 
-        if(!existingUser){
-            throw new UnauthorizedException("Invalid email and password");
-        }
+      const hash = await bcrypt.hash(dto.password, 10);
+      const created = await this.prisma.user.create({
+        data: { email: dto.email, name: dto.name ?? null, password: hash, role: dto.role ?? 'user' },
+      });
 
-        const isMatch = await bcrypt.compare(dto.password, existingUser.password);
-
-        if(!isMatch){
-            throw new UnauthorizedException("Invalid email or password");
-        }
-
-        const token = this.jwtService.sign({ userId: existingUser.id, email: existingUser.email, name: existingUser.name, role: existingUser.role})
-        return {
-            role: existingUser.role,
-            message: "Login Sucessful",
-            access_token: token
-        };
+      return this.sanitizeUser(created);
+    } catch (e) {
+      this.handlePrismaError(e);
     }
+  }
+
+  async loginUser(dto: LoginUserDto) {
+    try {
+      const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (!user) throw new BadRequestException('Invalid credentials');
+
+      const ok = await bcrypt.compare(dto.password, user.password);
+      if (!ok) throw new BadRequestException('Invalid credentials');
+
+   
+      const access_token = this.jwtService.sign({ userId: user.id, email: user.email, name: user.name, role: user.role})
+
+      return { access_token, role: user.role, name: user.name };
+    } catch (e) {
+      this.handlePrismaError(e);
+      throw e;
+    }
+  }
 }

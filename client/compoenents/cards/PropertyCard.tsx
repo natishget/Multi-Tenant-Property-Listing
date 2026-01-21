@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Property, likePropertyAsync } from "@/state/API/ApiSlice";
 
@@ -6,7 +6,6 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/state/store";
 
 import { ChevronLeft, ChevronRight, Heart } from "lucide-react";
-import { current } from "@reduxjs/toolkit";
 
 const PropertyCard = ({ property }: { property: Property }) => {
   const dispatch = useDispatch<AppDispatch>();
