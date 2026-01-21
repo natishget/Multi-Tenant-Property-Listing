@@ -11,6 +11,6 @@ export class UploadController {
   @Post('image')
   @UseInterceptors(FileInterceptor('file'))
   uploadImage(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadService.uploadToCloudinary(file);
+    return this.uploadService.uploadImage(file);
   }
 }

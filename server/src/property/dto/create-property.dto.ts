@@ -1,5 +1,6 @@
-import { IsEnum, IsNumber, IsString } from "class-validator"
-import { PropertyStatus } from '@prisma/client';
+import { IsEnum, IsNumber, IsString, IsOptional } from "class-validator"
+import { Type } from "class-transformer"
+import { PropertyStatus } from "@prisma/client"
 
 
 export class CreatePropertyDto {
@@ -9,14 +10,16 @@ export class CreatePropertyDto {
     @IsString()
     description!: string;
 
+    @Type(() => Number)
     @IsNumber()
     price!: number;
 
     @IsString()
     location!: string;
 
+    @IsOptional()
     @IsString({ each: true })
-    imageUrl!: string[];
+    imageUrl?: string[];
 
     @IsString()
     @IsEnum(PropertyStatus)

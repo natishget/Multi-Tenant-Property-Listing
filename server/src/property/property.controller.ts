@@ -1,19 +1,41 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Put, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
+import { FilesInterceptor } from '@nestjs/platform-express';
+
+import { Express } from 'express'
+
+import * as multer from 'multer';
+import { UploadService } from 'src/upload/upload.service';
+
 @Controller('property')
 export class PropertyController {
-  constructor(private readonly propertyService: PropertyService) {}
+  constructor(
+    private readonly propertyService: PropertyService,
+     private readonly uploadService: UploadService
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Req() req: any, @Body() createPropertyDto: CreatePropertyDto) {
-    const ownerId =  req.user?.userId;
-    console.log('ownerId', ownerId);
-    return this.propertyService.create(createPropertyDto, ownerId);
+  @UseInterceptors(FilesInterceptor('files', 10, { storage: multer.memoryStorage() }))
+  async create(
+    @Req() req: any,
+    @Body() dto: CreatePropertyDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    dto.price = Number(dto.price);
+    const ownerId = Number(req.user?.userId);
+    const imageUrls = files?.length
+      ? await Promise.all(files.map(f => this.uploadService.uploadImage(f)))
+      : [];
+
+    return this.propertyService.create(
+      { ...dto, imageUrl: imageUrls },
+      ownerId,
+    );
   }
 
   @Get()
@@ -25,7 +47,8 @@ export class PropertyController {
   @Get('/published')
   findAllPublished(@Req() req: any) {
     const userId = req.user?.userId;
-    return this.propertyService.findAllPublished(userId);
+    const page = req.query.page || 1;
+    return this.propertyService.findAllPublished(userId, page);
   }
 
   
@@ -33,8 +56,8 @@ export class PropertyController {
   @Get('/owner')
   findOwnerProperties(@Req() req: any) {
     const ownerId = req.user?.userId;
-    console.log('Fetching properties for ownerId:', ownerId);
-    return this.propertyService.findOwnerProperties(ownerId);
+    const page = req.query.page || 1;
+    return this.propertyService.findOwnerProperties(ownerId, page);
   }
 
   @Get(':id')
@@ -43,11 +66,15 @@ export class PropertyController {
     return this.propertyService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch('/update/:id')
+  @UseInterceptors(FilesInterceptor('files', 10, { storage: multer.memoryStorage() }))
   update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
+    updatePropertyDto.price = Number(updatePropertyDto.price);
     return this.propertyService.update(+id, updatePropertyDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('/updateStatus/:id')
   updateStatus(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
     return this.propertyService.update(+id, updatePropertyDto);
@@ -60,6 +87,7 @@ export class PropertyController {
     return this.propertyService.like(+id, +userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('/delete/:id')
   remove(@Param('id') id: string) {
     return this.propertyService.remove(+id);

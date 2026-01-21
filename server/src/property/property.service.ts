@@ -9,15 +9,26 @@ import { Prisma } from '@prisma/client';
 export class PropertyService {
   constructor(private prisma: PrismaService) {}
 
-  // ...existing code...
+
   async create(createPropertyDto: CreatePropertyDto, ownerId: number) {
     const data: Prisma.PropertyUncheckedCreateInput = {
       ...createPropertyDto,
       ownerId,
     };
-    return this.prisma.property.create({ data });
+    const property = await this.prisma.property.create({ data });
+    console.log('Created property:', property);
+    const fullProperty = await this.prisma.property.findUnique({
+      where: { id: property.id },
+      include: {
+        _count: { select: { favorites: true } }, // like count
+        favorites: ownerId
+          ? { where: { userId: ownerId }, select: { id: true } } // only to compute likedByMe
+          : false,
+      }
+    })
+    return fullProperty;
   }
-// ...existing code...
+
 
 
   findAll(page = 1) {
@@ -32,25 +43,47 @@ export class PropertyService {
     });
   }
 
-  findOwnerProperties(ownerId: number) {
-    // const take = 20;
-    // const safePage = Math.max(1, Number(page) || 1);
-    // const skip = (safePage - 1) * take;
+  async findOwnerProperties(ownerId: number, page = 1) {
+    const take = 20;
+    const safePage = Math.max(1, Number(page) || 1);
+    const skip = (safePage - 1) * take;
 
-    return this.prisma.property.findMany({
-      where: { ownerId },
-      // skip,
-      // take,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [total, items] = await Promise.all([
+      this.prisma.property.count({ where: { ownerId } }),
+      this.prisma.property.findMany({
+        where: { ownerId },
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+        _count: { select: { favorites: true } }, // like count
+        favorites: ownerId
+          ? { where: { userId: ownerId }, select: { id: true } } // only to compute likedByMe
+          : false,
+      },
+      }),
+    ]);
+
+    return {
+      data: items,
+      page: safePage,
+      totalPages: Math.ceil(total / take),
+      totalItems: total,
+    };
   }
 
 
+  async findAllPublished(userId?: number, page = 1) {
+    const take = 20;
+    const safePage = Math.max(1, Number(page) || 1);
+    const skip = (safePage - 1) * take;
 
-
-  async findAllPublished(userId?: number) {
-    return this.prisma.property.findMany({
+    const [total, items] = await Promise.all([
+      this.prisma.property.count({ where: { status: 'published' } }),
+       this.prisma.property.findMany({
       where: { status: 'published' },
+      skip,
+      take,
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { favorites: true } }, // like count
@@ -66,7 +99,15 @@ export class PropertyService {
           likedByMe: userId ? favorites.length > 0 : false,
         };
       }),
-    );
+    )
+  ]);
+
+    return {
+      data: items,
+      page: safePage,
+      totalPages: Math.ceil(total / take),
+      totalItems: total,
+    };
   }
 
 
@@ -76,11 +117,19 @@ export class PropertyService {
     return `This action returns a #${id} property`;
   }
 
-  update(id: number, updatePropertyDto: UpdatePropertyDto) {
-    return this.prisma.property.update({
+  async update(id: number, updatePropertyDto: UpdatePropertyDto) {
+    const updatedProperty = await this.prisma.property.update({
       where: {id},
       data: {...updatePropertyDto},
     })
+    const withCount = await this.prisma.property.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { favorites: true } }, // like count
+      },
+    })
+    console.log('Updated property with count:', withCount);
+    return withCount
   }
 
   async like(propertyId: number, userId: number) {
