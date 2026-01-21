@@ -24,10 +24,19 @@ export const loginSchema = z.object({
     password: z.string(),
   })
 
+  const imageFiles = z
+  .array(
+    z
+      .instanceof(File)
+      .refine((file) => file.type.startsWith("image/"), "File must be an image")
+      .refine((file) => file.size <= 1_000_000, "Max size is 1MB per file")
+  )
+  .min(1, "Atleast one image is required");
+
 export const addProductSchema = z.object({
     title: z.string().min(3, "Title must be atleast 3 Characters"),
     price: z.number().min(1, "Price must be greater than 0"),
     location: z.string().min(3, "Location must be atleast 3 Characters"),
-    imageUrl: z.array(z.string().url("Invalid URL")),
+    imageUrl: imageFiles,
     description: z.string().min(10, "Description must be atleast 10 Characters"),
 });

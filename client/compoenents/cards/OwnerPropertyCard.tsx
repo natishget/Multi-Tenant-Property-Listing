@@ -5,30 +5,36 @@ import { Property } from "@/state/API/ApiSlice";
 import EditPropertyDialog from "../dialog/EditPropertyDialog";
 import PropertyDeleteAlertDialog from "../dialog/PropertyDeleteAlertDialog";
 
-import { Archive, Eye, EyeClosed } from "lucide-react";
+import { Archive, Eye, EyeClosed, Heart } from "lucide-react";
 
 import { updatePropertyStatusAsync } from "@/state/API/ApiSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/state/store";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const OwnerPropertyCard = ({ property }: { property: Property }) => {
   const dispatch = useDispatch<AppDispatch>();
 
-  let currentImageIndex = 0;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const totalImages = property.imageUrl.length;
 
-  const handlePreviousImage = () => {
-    if (property.imageUrl.length - 1 === currentImageIndex)
-      currentImageIndex = 0;
-    currentImageIndex += 1;
-  };
+  const handleNextImage = () =>
+    setCurrentImageIndex((prev) =>
+      totalImages ? (prev + 1) % totalImages : 0,
+    );
 
-  const handleNextImage = () => {
-    if (property.imageUrl.length - 1 === currentImageIndex)
-      currentImageIndex = property.imageUrl.length - 1;
+  const handlePreviousImage = () =>
+    setCurrentImageIndex((prev) =>
+      totalImages ? (prev - 1 + totalImages) % totalImages : 0,
+    );
 
-    currentImageIndex -= 1;
-  };
+  useEffect(() => {
+    if (totalImages <= 1) return;
+    const id = setInterval(handleNextImage, 3000);
+    return () => clearInterval(id);
+  }, [totalImages]);
+
   const handleStatusChange = async () => {
     try {
       const response = await dispatch(
@@ -45,10 +51,9 @@ const OwnerPropertyCard = ({ property }: { property: Property }) => {
     }
   };
 
-  setInterval(handleNextImage, 3000);
   return (
     <div
-      className={`border border-gray-100 bg-white w-[600px] shadow-2xl rounded-xl text-lg text-gray-800 ${property.status === "draft" ? "border-b-6 border-b-yellow-500" : property.status === "published" ? "border-b-6 border-green-600" : "border-b-6 border-gray-600"}`}
+      className={`border border-gray-100 bg-white md:w-[500px] w-[400px] shadow-2xl rounded-xl text-lg text-gray-800 ${property.status === "draft" ? "border-b-6 border-b-yellow-500" : property.status === "published" ? "border-b-6 border-green-600" : "border-b-6 border-gray-600"}`}
       key={property.id}
     >
       <div>
@@ -62,7 +67,7 @@ const OwnerPropertyCard = ({ property }: { property: Property }) => {
           <Image
             src={property?.imageUrl[currentImageIndex] || "/placeholder.jpg"}
             alt="property image"
-            className="rounded-xl  object-cover w-full"
+            className="rounded-xl object-cover aspect-ratio w-full h-[300px]"
             width={300}
             height={100}
           />
@@ -73,9 +78,15 @@ const OwnerPropertyCard = ({ property }: { property: Property }) => {
             <ChevronRight className="" />
           </button>
         </div>
-        <p className=" pl-3">
-          Title: <span className="text-gray-500">{property.title}</span>
-        </p>
+        <div className="flex justify-between items-center mt-5">
+          <p className=" pl-3">
+            Title: <span className="text-gray-500">{property.title}</span>
+          </p>
+          <div className="flex gap-2 justify-center items-center mr-3">
+            {property._count.favorites}
+            <Heart className="text-red-600" />
+          </div>
+        </div>
         <h1 className="  pl-3">
           Price: <span className="text-gray-500">{property.price}</span>
         </h1>

@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import AddToCart from "../buttons/AddToCart";
 import { Property, likePropertyAsync } from "@/state/API/ApiSlice";
 
 import { useDispatch } from "react-redux";
@@ -14,22 +13,24 @@ const PropertyCard = ({ property }: { property: Property }) => {
   const handleLikeProperty = async () => {
     dispatch(likePropertyAsync({ propertyId: property.id }));
   };
-  let currentImageIndex = 0;
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const totalImages = property.imageUrl.length;
 
-  const handlePreviousImage = () => {
-    if (property.imageUrl.length - 1 === currentImageIndex)
-      currentImageIndex = 0;
-    currentImageIndex += 1;
-  };
+  const handleNextImage = () =>
+    setCurrentImageIndex((prev) =>
+      totalImages ? (prev + 1) % totalImages : 0,
+    );
 
-  const handleNextImage = () => {
-    if (property.imageUrl.length - 1 === currentImageIndex)
-      currentImageIndex = property.imageUrl.length - 1;
+  const handlePreviousImage = () =>
+    setCurrentImageIndex((prev) =>
+      totalImages ? (prev - 1 + totalImages) % totalImages : 0,
+    );
 
-    currentImageIndex -= 1;
-  };
-
-  setInterval(handleNextImage, 3000);
+  useEffect(() => {
+    if (totalImages <= 1) return;
+    const id = setInterval(handleNextImage, 3000);
+    return () => clearInterval(id);
+  }, [totalImages]);
   return (
     <div
       className="border border-gray-100 bg-white w-[500px] shadow-2xl rounded-xl"
@@ -46,7 +47,7 @@ const PropertyCard = ({ property }: { property: Property }) => {
           <Image
             src={property?.imageUrl[currentImageIndex] || "/placeholder.jpg"}
             alt="property image"
-            className="rounded-xl  object-cover w-full"
+            className="rounded-xl object-cover aspect-ratio w-full h-[300px]"
             width={300}
             height={100}
           />

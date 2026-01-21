@@ -32,7 +32,7 @@ const LoginForm = () => {
   );
 
   if (initialized && user?.role === "owner") {
-    router.push("/product");
+    router.push("/property");
   } else if (initialized && user?.role === "user" && user) {
     router.push("/");
   }

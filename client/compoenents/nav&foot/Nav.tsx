@@ -1,11 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import ProductSearch from "../forms/ProductSearch";
 import { ShoppingCart, Bell, CircleUserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-
-import { registerPush } from "@/lib/push";
 
 // redux
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +30,6 @@ const Nav = () => {
   const { user, loading, initialized } = useSelector(
     (state: RootState) => state.api,
   );
-  const cartProducts = useSelector((state: RootState) => state.cart.items);
 
   const handleLogout = async () => {
     // Implement logout functionality here
@@ -87,24 +83,6 @@ const Nav = () => {
       </h1>
       <h1 className="text-xl">Hello {user?.name}</h1>
       <div className="flex items-center gap-10 text-lg font-semibold">
-        <Link
-          href="/"
-          className={`hover:text-[rgb(56,177,151)] ${
-            user?.role === "user" ? "" : "hidden"
-          } ${location === "/" && "text-[rgb(56,177,151)]"}`}
-        >
-          Products
-        </Link>
-
-        <Link
-          href="/property"
-          className={`hover:text-[rgb(56,177,151)] ${
-            user?.role === "owner" ? "" : "hidden"
-          } ${location === "/property" && "text-[rgb(56,177,151)]"}`}
-        >
-          My Products
-        </Link>
-
         <Link
           href=""
           className={`hover:text-[rgb(56,177,151)] ${

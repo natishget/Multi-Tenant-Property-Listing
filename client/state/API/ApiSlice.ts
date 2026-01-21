@@ -6,13 +6,11 @@ interface ApiState {
     registerResponse: RegisterResponse;
     loginResponse: LoginResponse;
     Property: Property[];
-    CreateOrder: CreateOrder[];
-    BuyerOrder: Order[];
-    SellerOrder: Order[];
     loading: boolean;
     error: string | null;
     user: User | null;
     initialized?: boolean;
+    ownerMeta: {totalItems: number; page: number; totalPages: number;}
 }
 
 interface RegisterResponse {
@@ -24,8 +22,6 @@ interface RegisterResponse {
     };
     error?: string;
 }
-
-
 
 interface LoginResponse {
     token?: string;
@@ -51,33 +47,14 @@ export interface Property {
     likedByMe: boolean;
 }
 
-export interface Order {
-    id: number;
-    product: {
-            id: number
-            title: string;
-            price: number;
-            description: string;
-            category: string;
-            seller: {
-                id: number;
-                name: string;
-                phone: string;
-                email: string;
-                isSeller: boolean;
-            }
-        };
-        buyer: {
-            id: number;
-            name: string;
-            phone: string;
-            email: string;
-            isSeller: boolean;
-        },
-        quantity: number;
-        createdAt: Date;
-        status: string;
+export interface PaginatedPropertyResponse {
+    data: Property[];
+    totalPages: number;
+    page: number;
+    totalItems: number;
 }
+
+
 
 export interface User {
     UserId: string;
@@ -85,13 +62,6 @@ export interface User {
     email: string;
     phone?: number;
     role?: "user" | "owner";
-}
-
-interface CreateOrder {
-    productId: number;
-    totalPrice: number;
-    quantity: number;
-    productQuantity: number;
 }
 
 const initialState: ApiState = {
@@ -102,17 +72,15 @@ const initialState: ApiState = {
     },
     loginResponse: { token: "", message: "", error: "" },
     Property: [],
-    CreateOrder: [],
-    BuyerOrder: [],
-    SellerOrder: [],
     loading: false,
     error: null,
     user: null,
     initialized: false,
+    ownerMeta: {totalItems: 0, page: 0, totalPages: 0}
+
 };
 
-// Login: send credentials, server sets cookie and returns token/message.
-// After successful login we dispatch protectedRouteAsync to load the user into redux.
+
 export const loginAsync = createAsyncThunk<
     LoginResponse,
     object,
@@ -175,25 +143,16 @@ export const protectedRouteAsync = createAsyncThunk<
     },
 });
 
-export const pushNotificationSubscribeAsync = createAsyncThunk<
-    void,
-    object,
-    { rejectValue: string }
->("pushNotificationSubscribeAsync", async (subscription, { rejectWithValue }) => {
-    try {
-        await api.post("/notification/subscribe", subscription, { withCredentials: true });
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Push subscription failed");
-    }
-});
+
 
 export const getAllPublishedProperty = createAsyncThunk<
-    Property[],
-    void,
+    PaginatedPropertyResponse,
+    {page?: number},
     { rejectValue: string }
->("getAllPublishedProperty", async (_, { rejectWithValue }) => {
+>("getAllPublishedProperty", async ({page = 1}, { rejectWithValue }) => {
     try {
-        const response = await api.get("/property/published");
+        const response = await api.get("/property/published", { params: { page }, withCredentials: true });
+        console.log("slice response", response);
         return response.data;
     } catch (error: any) {
         console.log("error trying to get all property in slice", error);
@@ -217,11 +176,11 @@ export const addPropertyAsync = createAsyncThunk<
 
 export const editPropertyAsync = createAsyncThunk<
     Property,
-    {property: Property, id: number},
+    {formData: FormData, id: number},
     { rejectValue: string }
 >("editPropertyAsync", async (data, { rejectWithValue }) => {
     try {
-        const response = await api.patch(`/property/update/${data.id}`, data.property,
+        const response = await api.patch(`/property/update/${data.id}`, data.formData,
              { withCredentials: true });
         return response.data;
     } catch (error: any) {
@@ -244,58 +203,21 @@ export const deletePropertyAsync = createAsyncThunk<
 });
 
 export const getOwnerProperties = createAsyncThunk<
-    Property[],
-    void,
+    PaginatedPropertyResponse,
+    {page?: number},
     { rejectValue: string }
->("getOwnerProperties", async (_, { rejectWithValue }) => {
+>("getOwnerProperties", async ({page = 1}, { rejectWithValue }) => {
     try {
-        const response = await api.get("/property/owner", { withCredentials: true });
-        console.log(response.data);
+        const response = await api.get("/property/owner", { params: { page }, withCredentials: true });
+        console.log("slice response", response);
         return response.data;
     } catch (error: any) {
         return rejectWithValue(error.response?.data?.message || "Failed to get owner properties");
     }
 });
 
-export const createOrderAsync = createAsyncThunk<
-    CreateOrder,
-    object,
-    { rejectValue: string }
->("createOrderAsync", async (data, { rejectWithValue }) => {
-    try {
-        const response = await api.post("/order/create", data,
-             { withCredentials: true });
-        return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Place order failed");
-    }
-});
 
-export const getBuyerOrdersAsync = createAsyncThunk<
-    Order[],
-    void,
-    { rejectValue: string }
->("getBuyerOrdersAsync", async (_, { rejectWithValue }) => {
-    try {
-        const response = await api.get("/order/getBuyerOrders", { withCredentials: true });
-        return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Failed to get buyer orders");
-    }
-});
 
-export const getSellerOrdersAsync = createAsyncThunk<
-    Order[],
-    void,
-    { rejectValue: string }
->("getSellerOrdersAsync", async (_, { rejectWithValue }) => {
-    try {
-        const response = await api.get("/order/getSellerOrders", { withCredentials: true });
-        return response.data;
-    } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Failed to get seller orders");
-    }
-});
 
 export const updatePropertyStatusAsync = createAsyncThunk<
     {propertyId: number; status: string},
@@ -399,19 +321,6 @@ const ApiSlice = createSlice({
                 state.initialized = true;
             })
 
-            //notification
-            .addCase(pushNotificationSubscribeAsync.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(pushNotificationSubscribeAsync.fulfilled, (state) => {
-                state.loading = false;
-            })
-            .addCase(pushNotificationSubscribeAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload || action.error.message || "something went wrong";
-            })
-
             // products
             .addCase(getAllPublishedProperty.pending, (state) => {
                 state.loading = true;
@@ -419,7 +328,8 @@ const ApiSlice = createSlice({
             })
             .addCase(getAllPublishedProperty.fulfilled, (state, action) => {
                 state.loading = false;
-                state.Property = action.payload;
+                state.Property = action.payload.data;
+                state.ownerMeta = {totalItems: action.payload.totalItems, page: action.payload.page, totalPages: action.payload.totalPages};
             })
             .addCase(getAllPublishedProperty.rejected, (state, action) => {
                 state.loading = false;
@@ -471,61 +381,23 @@ const ApiSlice = createSlice({
                 state.error = action.payload || action.error.message || "something went wrong";
             })
 
+            // get owner properties
             .addCase(getOwnerProperties.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(getOwnerProperties.fulfilled, (state, action) => {
                 state.loading = false;
-                state.Property = action.payload;
+                state.Property = action.payload.data;
+                state.ownerMeta = {totalItems: action.payload.totalItems, page: action.payload.page, totalPages: action.payload.totalPages};
+                
             })
             .addCase(getOwnerProperties.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload || action.error.message || "something went wrong";
             })
 
-            // create order
-            .addCase(createOrderAsync.pending, (state) =>{
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(createOrderAsync.fulfilled, (state, action) =>{
-                state.loading = false;
-                state.CreateOrder.push(action.payload);
-            })
-            .addCase(createOrderAsync.rejected, (state, action) =>{
-                state.loading = false;
-                state.error = action.payload || action.error.message || "something went wrong";
-            })
-
-            // get buyer orders
-            .addCase(getBuyerOrdersAsync.pending, (state) =>{
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getBuyerOrdersAsync.fulfilled, (state, action) =>{
-                state.loading = false;
-                state.BuyerOrder = action.payload;
-            })
-            .addCase(getBuyerOrdersAsync.rejected, (state, action) =>{
-                state.loading = false;
-                state.error = action.payload || action.error.message || "something went wrong";
-            })
-
-            // get seller orders
-            .addCase(getSellerOrdersAsync.pending, (state) =>{
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getSellerOrdersAsync.fulfilled, (state, action) =>{
-                state.loading = false;
-                state.SellerOrder = action.payload;
-            })
-            .addCase(getSellerOrdersAsync.rejected, (state, action) =>{
-                state.loading = false;
-                state.error = action.payload || action.error.message || "something went wrong";
-            })
-
+            // update property status
             .addCase(updatePropertyStatusAsync.pending, (state) =>{
                 state.loading = true;
                 state.error = null;
@@ -542,6 +414,7 @@ const ApiSlice = createSlice({
                 state.error = action.payload || action.error.message || "something went wrong";
             })
 
+            // like property
             .addCase(likePropertyAsync.pending, (state) =>{
                 state.loading = true;
                 state.error = null;
