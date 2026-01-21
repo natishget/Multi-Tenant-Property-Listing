@@ -26,17 +26,19 @@ const AddPropertyDialog = () => {
 
   const onSubmit = async (data: PropertyForm) => {
     setIsLoading(true);
-
-    const property = { ...data, status: "draft" };
-
-    console.log("data to be sent", property);
     try {
-      const response = await dispatch(addPropertyAsync(property)).unwrap();
-      console.log("response on form", response);
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("location", data.location);
+      formData.append("price", String(data.price));
+      formData.append("description", data.description);
+      data.imageUrl.forEach((file) => formData.append("files", file));
+      formData.append("status", "draft");
+
+      await dispatch(addPropertyAsync(formData)).unwrap();
       setOpen(false);
-    } catch (err: unknown) {
-      console.log("from form", err);
-      // setError(err as array);
+    } catch (err: any) {
+      alert(err.message || "Failed to add property");
     } finally {
       setIsLoading(false);
     }
@@ -46,9 +48,10 @@ const AddPropertyDialog = () => {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<PropertyForm>({
     resolver: zodResolver(addProductSchema),
-    defaultValues: { imageUrl: [""] },
+    defaultValues: { imageUrl: [] },
   });
 
   return (
@@ -68,6 +71,7 @@ const AddPropertyDialog = () => {
             onSubmit={handleSubmit(onSubmit)}
             action=""
             className="bg-white flex flex-col items-center justify-center w-full"
+            encType="multipart/form-data"
           >
             <h1 className="text-4xl font-bold text-gray-800 m-5">
               App Property
@@ -91,10 +95,15 @@ const AddPropertyDialog = () => {
             <p className="text-red-500">{errors.location?.message}</p>
             <br />
             <input
-              type="text"
+              type="file"
               id="imageURL"
-              {...register("imageUrl.0")}
-              placeholder="Image URL"
+              multiple
+              accept="image/*"
+              onChange={(e) =>
+                setValue("imageUrl", Array.from(e.target.files ?? []), {
+                  shouldValidate: true,
+                })
+              }
               className="w-[80%] p-5  bg-[rgb(244,248,247)]"
             />{" "}
             <p className="text-red-500">{errors.imageUrl?.message}</p>

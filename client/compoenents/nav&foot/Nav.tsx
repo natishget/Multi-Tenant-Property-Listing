@@ -1,11 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import ProductSearch from "../forms/ProductSearch";
 import { ShoppingCart, Bell, CircleUserRound } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-
-import { registerPush } from "@/lib/push";
 
 // redux
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +30,6 @@ const Nav = () => {
   const { user, loading, initialized } = useSelector(
     (state: RootState) => state.api,
   );
-  const cartProducts = useSelector((state: RootState) => state.cart.items);
 
   const handleLogout = async () => {
     // Implement logout functionality here
@@ -54,27 +50,6 @@ const Nav = () => {
     setLocation(pathname);
   }, [pathname]);
 
-  // useEffect(() => {
-  //   const loadUser = async () => {
-  //     try {
-  //       setIsLoading(true);
-  //       const response = await dispatch(protectedRouteAsync()).unwrap();
-  //       console.log("protectedRoute response:", response);
-  //       setUserInfo(response);
-  //     } catch (err: any) {
-  //       console.log("failed to load protected route:", err);
-  //       // show a friendly message (err may be an object)
-  //       alert(err?.message || JSON.stringify(err) || "Failed to load user");
-  //       router.push("/login");
-  //       setUserInfo(null);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   loadUser();
-  // }, [dispatch]);
-
   return (
     <nav
       className={`flex ${
@@ -83,28 +58,10 @@ const Nav = () => {
     `}
     >
       <h1 className="font-bold text-3xl text-[rgb(56,177,151)]">
-        Easy<span className="text-gray-800">Buy</span>
+        Multi<span className="text-gray-800">Tenant</span>
       </h1>
       <h1 className="text-xl">Hello {user?.name}</h1>
       <div className="flex items-center gap-10 text-lg font-semibold">
-        <Link
-          href="/"
-          className={`hover:text-[rgb(56,177,151)] ${
-            user?.role === "user" ? "" : "hidden"
-          } ${location === "/" && "text-[rgb(56,177,151)]"}`}
-        >
-          Products
-        </Link>
-
-        <Link
-          href="/property"
-          className={`hover:text-[rgb(56,177,151)] ${
-            user?.role === "owner" ? "" : "hidden"
-          } ${location === "/property" && "text-[rgb(56,177,151)]"}`}
-        >
-          My Products
-        </Link>
-
         <Link
           href=""
           className={`hover:text-[rgb(56,177,151)] ${
@@ -122,7 +79,7 @@ const Nav = () => {
             >
               <div className="flex items-center justify-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-teal-600 flex justify-center items-center border border-teal-600 text-white text-semibold rounded-full">
-                  {user?.name.charAt(0)}
+                  {user?.name.charAt(0).toUpperCase()}
                 </div>
                 <p>{user?.name}</p>
               </div>

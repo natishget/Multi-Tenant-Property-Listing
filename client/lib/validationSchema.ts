@@ -11,7 +11,7 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Password must atleast have one number")
     .regex(/^[a-zA-Z0-9]/, "Password must have atleast one Special character"),
     confirmPassword: z.string(),
-    role: z.enum(["user", "owner"], { message: "Please select Buyer or Seller" }),
+    role: z.enum(["user", "owner", "admin"], { message: "Please select Buyer or Seller" }),
     // isSeller: z.string().refine(val => val === "buyer" || val === "seller", { message: "Please select Buyer of Seller" }).transform(val => val==="seller")
 })
 .refine((data) => data.password === data.confirmPassword, {
@@ -24,10 +24,19 @@ export const loginSchema = z.object({
     password: z.string(),
   })
 
+  const imageFiles = z
+  .array(
+    z
+      .instanceof(File)
+      .refine((file) => file.type.startsWith("image/"), "File must be an image")
+      .refine((file) => file.size <= 1_000_000, "Max size is 1MB per file")
+  )
+  .min(1, "Atleast one image is required");
+
 export const addProductSchema = z.object({
     title: z.string().min(3, "Title must be atleast 3 Characters"),
     price: z.number().min(1, "Price must be greater than 0"),
     location: z.string().min(3, "Location must be atleast 3 Characters"),
-    imageUrl: z.array(z.string().url("Invalid URL")),
+    imageUrl: imageFiles,
     description: z.string().min(10, "Description must be atleast 10 Characters"),
 });

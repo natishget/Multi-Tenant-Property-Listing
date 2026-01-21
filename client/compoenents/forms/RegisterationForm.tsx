@@ -52,7 +52,6 @@ const RegisterationForm = () => {
       // console.log("response on form", response);
       router.push("/login");
     } catch (error: any) {
-      console.log("from form", error);
       setError(error?.payload || error);
     } finally {
       setIsLoading(false);
@@ -111,10 +110,10 @@ const RegisterationForm = () => {
         />{" "}
         <p className="text-red-500">{errors.confirmPassword?.message}</p>
         <br />
-        <div className=" gap-3 justify-center w-[40%]">
+        <div className=" gap-3 justify-center w-[40%] text-gray-500">
           <div className="">
             <input type="radio" id="buyer" value="user" {...register("role")} />
-            <label htmlFor="buyer" className="">
+            <label htmlFor="buyer" className="ml-2">
               User
             </label>
           </div>
@@ -125,7 +124,20 @@ const RegisterationForm = () => {
               value="owner"
               {...register("role")}
             />
-            <label htmlFor="seller">Owner</label>
+            <label htmlFor="seller" className="ml-2">
+              Owner
+            </label>
+          </div>
+          <div>
+            <input
+              type="radio"
+              id="seller"
+              value="admin"
+              {...register("role")}
+            />
+            <label htmlFor="seller" className="ml-2">
+              Admin (this choice is only avaliabe b/c it is a test)
+            </label>
           </div>
         </div>
         <p className="text-red-500">{errors.role?.message}</p>

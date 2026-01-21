@@ -27,16 +27,22 @@ const EditPropertyDialog = ({ property }: { property: Property }) => {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
-      const response = await dispatch(
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("location", data.location);
+      formData.append("price", String(data.price));
+      formData.append("description", data.description);
+      data.imageUrl.forEach((file) => formData.append("files", file));
+      formData.append("status", property.status);
+      await dispatch(
         editPropertyAsync({
-          property: { ...property, ...data, imageUrl: data.imageUrl },
+          formData,
           id: property.id,
         }),
       ).unwrap();
       setOpen(false);
-      // router.push("/login");
-    } catch (err: unknown) {
-      console.log("from form", err);
+    } catch (err: any) {
+      alert(err.message || "Failed to edit property");
       // setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
@@ -47,15 +53,14 @@ const EditPropertyDialog = ({ property }: { property: Property }) => {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<FormValues>({
     resolver: zodResolver(addProductSchema),
     defaultValues: {
       title: property.title,
       price: property.price,
       location: property.location,
-      imageUrl: Array.isArray(property.imageUrl)
-        ? property.imageUrl
-        : [property.imageUrl ?? ""],
+      imageUrl: [],
       description: property.description,
     },
   });
@@ -104,12 +109,17 @@ const EditPropertyDialog = ({ property }: { property: Property }) => {
             </div>
             <br />
             <div className="flex flex-col w-[60%] gap-1 text-gray-600">
-              <label htmlFor="imageUrl">Image URL</label>
+              <label htmlFor="imageUrl">Add Images</label>
               <input
-                type="text"
-                id="imageURL"
-                {...register("imageUrl")}
-                placeholder="Image URL"
+                type="file"
+                id="imageUrl"
+                multiple
+                accept="image/*"
+                onChange={(e) =>
+                  setValue("imageUrl", Array.from(e.target.files ?? []), {
+                    shouldValidate: true,
+                  })
+                }
                 className=" p-5  bg-[rgb(244,248,247)]"
               />{" "}
               <p className="text-red-500">{errors.imageUrl?.message}</p>

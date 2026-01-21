@@ -71,6 +71,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      streamifier:
+        specifier: ^0.1.1
+        version: 0.1.1
       web-push:
         specifier: ^3.6.7
         version: 3.6.7
@@ -135,6 +138,9 @@ importers:
       '@types/passport-jwt':
         specifier: ^4.0.1
         version: 4.0.1
+      '@types/streamifier':
+        specifier: ^0.1.2
+        version: 0.1.2
       '@types/supertest':
         specifier: ^6.0.3
         version: 6.0.3
@@ -1188,6 +1194,9 @@ packages:
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
+
+  '@types/streamifier@0.1.2':
+    resolution: {integrity: sha512-W53GwxY5Tunz3JUoP1YWDidrAadenSZKOBKMRl6RO3yThOFd03w7yx3HypI8ABGuUCGDHCHUml/5e45FWRt1TQ==}
 
   '@types/superagent@8.1.9':
     resolution: {integrity: sha512-pTVjI73witn+9ILmoJdajHGW2jkSaOzhiFYF1Rd3EQ94kymLqB9PjD9ISg7WaALC7+dCHT0FGe9T2LktLq/3GQ==}
@@ -3460,6 +3469,10 @@ packages:
     resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
     engines: {node: '>= 0.8'}
 
+  streamifier@0.1.1:
+    resolution: {integrity: sha512-zDgl+muIlWzXNsXeyUfOk9dChMjlpkq0DRsxujtYPgyJ676yQ8jEm6zzaaWHFDg5BNcLuif0eD2MTyJdZqXpdg==}
+    engines: {node: '>=0.10'}
+
   streamsearch@1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
     engines: {node: '>=10.0.0'}
@@ -5021,6 +5034,10 @@ snapshots:
       '@types/send': 0.17.5
 
   '@types/stack-utils@2.0.3': {}
+
+  '@types/streamifier@0.1.2':
+    dependencies:
+      '@types/node': 22.17.0
 
   '@types/superagent@8.1.9':
     dependencies:
@@ -7636,6 +7653,8 @@ snapshots:
   statuses@2.0.1: {}
 
   statuses@2.0.2: {}
+
+  streamifier@0.1.1: {}
 
   streamsearch@1.1.0: {}
 

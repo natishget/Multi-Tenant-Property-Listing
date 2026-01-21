@@ -7,10 +7,10 @@ const Page = () => {
       <div className="w-[80%] h-[80%] flex border border-gray-100 rounded-xl bg-white drop-shadow-lg ">
         {/* sign in to easy buy  */}
         <div className="w-3/4 flex-col h-full">
-          <h1 className="p-5 font-bold">EasyBuy</h1>
+          <h1 className="p-5 font-bold">MultiTenant</h1>
           <div className="flex flex-col justify-center items-center h-full w-full">
             <p className=" text-4xl font-extrabold text-[rgb(56,177,151)] mb-16 ">
-              Sign in to EasyBuy
+              Sign in to Multi-Tenant
             </p>
             <LoginForm />
           </div>
